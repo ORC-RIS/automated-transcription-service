@@ -32,6 +32,7 @@ module "transcribe" {
   environment_variables = {
     LOG_LEVEL = "INFO"
     BUCKET    = aws_s3_bucket.download.id
+    PREFIX    = var.prefix
   }
 
   attach_policy_json = true
