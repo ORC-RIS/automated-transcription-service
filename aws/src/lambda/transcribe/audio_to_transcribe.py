@@ -44,7 +44,15 @@ def lambda_handler(event, context):
                     'ShowSpeakerLabels': True,
                     'MaxSpeakerLabels': 10,
                 },
-                IdentifyMultipleLanguages=True,
+                IdentifyMultipleLanguages=False,
+                IdentifyLanguage=True,
+                ContentRedaction={
+                    'RedactionType': 'PII',
+                    'RedactionOutput': 'redacted_and_unredacted',
+                    'PiiEntityTypes': [
+                        'ALL',
+                    ]
+                },
                 Media={
                     'MediaFileUri': s3Path
                 },
