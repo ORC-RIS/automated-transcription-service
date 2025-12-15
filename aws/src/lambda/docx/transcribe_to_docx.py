@@ -780,79 +780,88 @@ def lambda_handler(event, context):
             }
         }
 
-    # Try and download the transcript JSON
-    if "RedactedTranscriptFileUri" in job_info["Transcript"]:
-        download_url = job_info["Transcript"]["RedactedTranscriptFileUri"]
+    # Determine which transcripts to process
+    transcript_urls = []
+    if "RedactedTranscriptFileUri" in job_info["Transcript"] and "TranscriptFileUri" in job_info["Transcript"]:
+        transcript_urls = [(job_info["Transcript"]["RedactedTranscriptFileUri"], "-redacted"),
+                          (job_info["Transcript"]["TranscriptFileUri"], "-unredacted")]
+    elif "RedactedTranscriptFileUri" in job_info["Transcript"]:
+        transcript_urls = [(job_info["Transcript"]["RedactedTranscriptFileUri"], "")]
     else:
-        download_url = job_info["Transcript"]["TranscriptFileUri"]
-    try:
-        transcript = get_json(download_url)
-    except Exception as e:
-        print(e)
-        title = "Transcription job failed"
-        default_message = f"Failed to download transcript for {job_name}"
-        print(default_message)
-        return {
-            'statusCode': 500,
-            'body': {
-                'subject': title,
-                'lambda': default_message,
-                'default': default_message,
-            }
-        }
+        transcript_urls = [(job_info["Transcript"]["TranscriptFileUri"], "")]
 
-    # Check the job settings for speaker/channel/audio ID
-    if "ChannelIdentification" in job_info["Settings"] and job_info["Settings"]["ChannelIdentification"]:
-        speech_segments = create_turn_by_turn_segments(transcript, isChannelMode = True)
-    elif "ShowSpeakerLabels" in job_info["Settings"] and job_info["Settings"]["ShowSpeakerLabels"]:
-        speech_segments = create_turn_by_turn_segments(transcript, isSpeakerMode = True)
-    elif "ChannelIdentification" in job_info["Settings"] and not job_info["Settings"]["ChannelIdentification"]:
-        speech_segments = create_turn_by_turn_segments(transcript, isAudioSegmentsMode = True)
-    else:
-        # We do not support non-speaker mode in this version
-        title = "Transcription job failed"
-        default_message = f"Transcribe job name: {job_name}. Channel/speaker/audio mode must be used in this version."
-        print(default_message)
-        return {
-            'statusCode': 500,
-            'body': {
-                'subject': title,
-                'lambda': default_message,
-                'default': default_message,
-            }
-        }
-
-    # Write out the file
     os.chdir("/tmp")
-    output_file = job_info["TranscriptionJobName"] + ".docx"
-    write(transcript, speech_segments, job_info, output_file)
+    uploaded_files = []
 
-    # Upload file to S3
-    # Use bucket provided in the environment variable, plus today's date
-    key = today + "/" + output_file
-    try:
-        s3.upload_file(output_file, BUCKET, key)
-    except Exception as e:
-        print(e)
-        title = "Transcription job failed"
-        default_message = f"Failed to upload file {output_file} to S3 bucket {BUCKET}"
-        print(default_message)
-        return {
-            'statusCode': 500,
-            'body': {
-                'subject': title,
-                'lambda': default_message,
-                'default': default_message,
+    # Process each transcript
+    for download_url, suffix in transcript_urls:
+        try:
+            transcript = get_json(download_url)
+        except Exception as e:
+            print(e)
+            title = "Transcription job failed"
+            default_message = f"Failed to download transcript for {job_name}"
+            print(default_message)
+            return {
+                'statusCode': 500,
+                'body': {
+                    'subject': title,
+                    'lambda': default_message,
+                    'default': default_message,
+                }
             }
-        }
+
+        # Check the job settings for speaker/channel/audio ID
+        if "ChannelIdentification" in job_info["Settings"] and job_info["Settings"]["ChannelIdentification"]:
+            speech_segments = create_turn_by_turn_segments(transcript, isChannelMode = True)
+        elif "ShowSpeakerLabels" in job_info["Settings"] and job_info["Settings"]["ShowSpeakerLabels"]:
+            speech_segments = create_turn_by_turn_segments(transcript, isSpeakerMode = True)
+        elif "ChannelIdentification" in job_info["Settings"] and not job_info["Settings"]["ChannelIdentification"]:
+            speech_segments = create_turn_by_turn_segments(transcript, isAudioSegmentsMode = True)
+        else:
+            # We do not support non-speaker mode in this version
+            title = "Transcription job failed"
+            default_message = f"Transcribe job name: {job_name}. Channel/speaker/audio mode must be used in this version."
+            print(default_message)
+            return {
+                'statusCode': 500,
+                'body': {
+                    'subject': title,
+                    'lambda': default_message,
+                    'default': default_message,
+                }
+            }
+
+        # Write out the file
+        output_file = job_info["TranscriptionJobName"] + suffix + ".docx"
+        write(transcript, speech_segments, job_info, output_file)
+
+        # Upload file to S3
+        key = today + "/" + output_file
+        try:
+            s3.upload_file(output_file, BUCKET, key)
+            uploaded_files.append(f"s3://{BUCKET}/{key}")
+        except Exception as e:
+            print(e)
+            title = "Transcription job failed"
+            default_message = f"Failed to upload file {output_file} to S3 bucket {BUCKET}"
+            print(default_message)
+            return {
+                'statusCode': 500,
+                'body': {
+                    'subject': title,
+                    'lambda': default_message,
+                    'default': default_message,
+                }
+            }
 
     deleteUploadFileHelper(job_status, job_info)
 
     title = "Transcription job completed"
-    s3uri = f"s3://{BUCKET}/{key}"
-    print(f"{title}: Job Name: {job_name} Transcript available at: {s3uri}")
-    lambda_message = f"Job Name:<br><pre>{job_name}</pre><br>Transcript available at:<br><pre>{s3uri}</pre>"
-    default_message = f"Transcription job {job_name} completed. Transcript available at {s3uri}"
+    s3uri = "\n".join(uploaded_files)
+    print(f"{title}: Job Name: {job_name} Transcripts available at: {s3uri}")
+    lambda_message = f"Job Name:<br><pre>{job_name}</pre><br>Transcripts available at:<br><pre>{s3uri.replace(chr(10), '<br>')}</pre>"
+    default_message = f"Transcription job {job_name} completed. Transcripts available at {s3uri}"
     creation_time = job_info["CreationTime"].strftime("%Y-%m-%d")
     total_duration = str(round(global_audio_duration, 2))
     return {
