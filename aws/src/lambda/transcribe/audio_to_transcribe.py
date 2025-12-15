@@ -1,4 +1,4 @@
-import boto3
+import boto3 # type: ignore
 from urllib.parse import unquote_plus
 import json
 from datetime import datetime as dt

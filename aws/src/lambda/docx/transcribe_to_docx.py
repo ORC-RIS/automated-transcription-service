@@ -1,4 +1,4 @@
-import boto3
+import boto3 # type: ignore
 from urllib.parse import urlparse
 from urllib.request import urlopen
 from urllib.request import urlretrieve
@@ -9,13 +9,13 @@ from io import BytesIO
 import statistics
 import os
 from docx import Document
-from docx.shared import Cm, Mm, Pt, Inches, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_COLOR_INDEX
-from docx.enum.style import WD_STYLE_TYPE
-from docx.enum.section import WD_SECTION
-from docx.oxml.shared import qn
-from docx.oxml.ns import nsdecls
-from docx.oxml import parse_xml
+from docx.shared import Cm, Mm, Pt, Inches, RGBColor # type: ignore
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_COLOR_INDEX # type: ignore
+from docx.enum.style import WD_STYLE_TYPE # type: ignore
+from docx.enum.section import WD_SECTION # type: ignore
+from docx.oxml.shared import qn # type: ignore
+from docx.oxml.ns import nsdecls # type: ignore
+from docx.oxml import parse_xml # type: ignore
 import argparse
 from pathlib import Path
 from time import perf_counter
