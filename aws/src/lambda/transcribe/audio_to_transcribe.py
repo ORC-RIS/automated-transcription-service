@@ -1,4 +1,4 @@
-import boto3
+import boto3 # type: ignore
 from urllib.parse import unquote_plus
 import json
 from datetime import datetime as dt
@@ -36,21 +36,32 @@ def lambda_handler(event, context):
         prefix = os.environ.get('PREFIX', 'ats')
         clean_object = re.sub('[^a-zA-Z0-9_\-.]+','_', s3object)
         jobName = f"{prefix}-{clean_object}-{str(uuid.uuid4())}"
+        pii_redaction = os.environ.get('PII_REDACTION', 'false').lower() == 'true'
 
         try:
-            response = ts_client.start_transcription_job(
-                TranscriptionJobName=jobName,
-                Settings={
+            job_params = {
+                'TranscriptionJobName': jobName,
+                'Settings': {
                     'ShowSpeakerLabels': True,
                     'MaxSpeakerLabels': 10,
                 },
-                IdentifyMultipleLanguages=True,
-                Media={
+                'IdentifyMultipleLanguages': False,
+                'IdentifyLanguage': True,
+                'Media': {
                     'MediaFileUri': s3Path
                 },
-                OutputBucketName = s3bucketOutput,
-                OutputKey = today + "/"
-            )
+                'OutputBucketName': s3bucketOutput,
+                'OutputKey': today + "/"
+            }
+            
+            if pii_redaction:
+                job_params['ContentRedaction'] = {
+                    'RedactionType': 'PII',
+                    'RedactionOutput': 'redacted_and_unredacted',
+                    'PiiEntityTypes': ['ALL']
+                }
+            
+            response = ts_client.start_transcription_job(**job_params)
             print(response)
         except Exception as e:
             print(e)
