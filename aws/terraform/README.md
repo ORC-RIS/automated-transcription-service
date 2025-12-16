@@ -2,6 +2,14 @@
 
 Terraform code to deploy the infrastructure used in ATS.
 
+## Transcription Configuration
+
+The transcription service is configured with the following features:
+
+- **Language Detection**: Automatically identifies the primary language of uploaded audio files
+- **Speaker Identification**: Labels different speakers in the audio (up to 10 speakers)
+- **PII Redaction**: Detects and redacts personally identifiable information, generating both redacted and unredacted transcript versions
+
 ## Secret Manager Integration
 
 Teams and Slack webhook URLs are stored securely in AWS Secrets Manager instead of directly in environment variables. 
