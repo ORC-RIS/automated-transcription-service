@@ -780,9 +780,11 @@ def lambda_handler(event, context):
             }
         }
 
-    # Determine which transcripts to process
+    # Determine which transcripts to process based on PII_REDACTION setting
+    pii_redaction = os.environ.get('PII_REDACTION', 'false').lower() == 'true'
     transcript_urls = []
-    if "RedactedTranscriptFileUri" in job_info["Transcript"] and "TranscriptFileUri" in job_info["Transcript"]:
+    
+    if pii_redaction and "RedactedTranscriptFileUri" in job_info["Transcript"] and "TranscriptFileUri" in job_info["Transcript"]:
         transcript_urls = [(job_info["Transcript"]["RedactedTranscriptFileUri"], "-redacted"),
                           (job_info["Transcript"]["TranscriptFileUri"], "-unredacted")]
     elif "RedactedTranscriptFileUri" in job_info["Transcript"]:

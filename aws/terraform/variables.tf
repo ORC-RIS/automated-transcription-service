@@ -93,3 +93,9 @@ variable "document_title" {
   type        = string
   default     = "Transcription Results"
 }
+
+variable "pii_redaction" {
+  description = "Enable PII redaction to create both redacted and unredacted transcripts"
+  type        = bool
+  default     = false
+}
