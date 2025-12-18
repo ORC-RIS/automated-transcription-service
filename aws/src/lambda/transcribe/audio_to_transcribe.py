@@ -45,8 +45,6 @@ def lambda_handler(event, context):
                     'ShowSpeakerLabels': True,
                     'MaxSpeakerLabels': 10,
                 },
-                'IdentifyMultipleLanguages': False,
-                'IdentifyLanguage': True,
                 'Media': {
                     'MediaFileUri': s3Path
                 },
@@ -55,11 +53,15 @@ def lambda_handler(event, context):
             }
             
             if pii_redaction:
+                job_params['IdentifyMultipleLanguages'] = False
+                job_params['IdentifyLanguage'] = True
                 job_params['ContentRedaction'] = {
                     'RedactionType': 'PII',
                     'RedactionOutput': 'redacted_and_unredacted',
                     'PiiEntityTypes': ['ALL']
                 }
+            else:
+                job_params['IdentifyMultipleLanguages'] = True
             
             response = ts_client.start_transcription_job(**job_params)
             print(response)

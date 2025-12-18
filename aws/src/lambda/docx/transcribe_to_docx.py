@@ -786,7 +786,7 @@ def lambda_handler(event, context):
     
     if pii_redaction and "RedactedTranscriptFileUri" in job_info["Transcript"] and "TranscriptFileUri" in job_info["Transcript"]:
         transcript_urls = [(job_info["Transcript"]["RedactedTranscriptFileUri"], "-redacted"),
-                          (job_info["Transcript"]["TranscriptFileUri"], "-unredacted")]
+                          (job_info["Transcript"]["TranscriptFileUri"], "")]
     elif "RedactedTranscriptFileUri" in job_info["Transcript"]:
         transcript_urls = [(job_info["Transcript"]["RedactedTranscriptFileUri"], "")]
     else:
