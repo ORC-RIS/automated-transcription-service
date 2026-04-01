@@ -24,21 +24,13 @@ RUN  pip install -r requirements.txt --target ${FUNCTION_DIR}
 # Change ownership of the function directory to the non-root user
 RUN chown -R appuser:appuser ${FUNCTION_DIR}
 
-# Use a distroless Python image to reduce the final image size
-FROM gcr.io/distroless/python3:nonroot
+# Use AWS Lambda base image for the runtime stage
+FROM public.ecr.aws/lambda/python:${PYTHON_VERSION}
 
 # Include global arg in this stage of the build
 ARG FUNCTION_DIR
 
-# Set working directory to function root directory
-WORKDIR ${FUNCTION_DIR}
+# Copy in the built dependencies
+COPY --from=build-image ${FUNCTION_DIR} ${LAMBDA_TASK_ROOT}
 
-# Copy in the built dependencies with proper ownership
-COPY --from=build-image --chown=nonroot:nonroot ${FUNCTION_DIR} ${FUNCTION_DIR}
-
-# Switch to non-root user
-USER nonroot
-
-# Set runtime interface client as default command for the container runtime
-#CMD [ "-m", "awslambdaric" ]
-ENTRYPOINT [ "/usr/bin/python3", "-m", "awslambdaric" ]
+CMD [ "transcribe_to_docx.lambda_handler" ]
