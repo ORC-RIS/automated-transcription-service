@@ -30,9 +30,10 @@ module "transcribe" {
   publish       = true
   source_path   = "${path.module}/../src/lambda/transcribe"
   environment_variables = {
-    LOG_LEVEL = "INFO"
-    BUCKET    = aws_s3_bucket.download.id
-    PREFIX    = var.prefix
+    LOG_LEVEL      = "INFO"
+    BUCKET         = aws_s3_bucket.download.id
+    PREFIX         = var.prefix
+    PII_REDACTION  = var.pii_redaction
   }
 
   attach_policy_json = true
@@ -271,6 +272,7 @@ module "docx" {
     CONFIDENCE        = var.confidence_score
     DOCX_MAX_DURATION = var.docx_max_duration
     DOCUMENT_TITLE    = var.document_title
+    PII_REDACTION     = var.pii_redaction
   }
 
   image_config_command = ["transcribe_to_docx.lambda_handler"]
