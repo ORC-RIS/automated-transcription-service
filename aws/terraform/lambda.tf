@@ -28,10 +28,12 @@ module "transcribe" {
   handler       = "audio_to_transcribe.lambda_handler"
   runtime       = "python${var.python_version}"
   publish       = true
-  source_path   = "../src/lambda/transcribe"
+  source_path   = "${path.module}/../src/lambda/transcribe"
   environment_variables = {
-    LOG_LEVEL = "INFO"
-    BUCKET    = aws_s3_bucket.download.id
+    LOG_LEVEL      = "INFO"
+    BUCKET         = aws_s3_bucket.download.id
+    PREFIX         = var.prefix
+    PII_REDACTION  = var.pii_redaction
   }
 
   attach_policy_json = true
@@ -87,7 +89,7 @@ module "teams-notification" {
   timeout       = 15 # Set a short timeout for notifications
   publish       = true
 
-  source_path = "../src/lambda/notifications/teams"
+  source_path = "${path.module}/../src/lambda/notifications/teams"
 
   environment_variables = {
     LOG_LEVEL          = "INFO"
@@ -172,7 +174,7 @@ module "export_jobs" {
   runtime       = "python${var.python_version}"
   timeout       = 300
   publish       = true
-  source_path   = "../src/lambda/export"
+  source_path   = "${path.module}/../src/lambda/export"
 
   environment_variables = {
     DOWNLOAD_BUCKET = aws_s3_bucket.download.id
@@ -237,7 +239,7 @@ module "docker_build" {
   # use_image_tag = true
   # image_tag   = "2.0"
 
-  source_path = "../src/lambda/docx"
+  source_path = "${path.module}/../src/lambda/docx"
   platform    = "linux/amd64"
   build_args = {
     PYTHON_VERSION = var.python_version # Specify the Python version to use in the Dockerfile
@@ -270,6 +272,7 @@ module "docx" {
     CONFIDENCE        = var.confidence_score
     DOCX_MAX_DURATION = var.docx_max_duration
     DOCUMENT_TITLE    = var.document_title
+    PII_REDACTION     = var.pii_redaction
   }
 
   image_config_command = ["transcribe_to_docx.lambda_handler"]
@@ -324,7 +327,7 @@ module "slack-notification" {
   timeout       = 15 # Set a short timeout for notifications
   publish       = true
 
-  source_path = "../src/lambda/notifications/slack"
+  source_path = "${path.module}/../src/lambda/notifications/slack"
 
   environment_variables = {
     LOG_LEVEL          = "INFO"

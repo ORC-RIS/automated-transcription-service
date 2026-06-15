@@ -43,10 +43,11 @@ module "step_function" {
               "Lambda.ServiceException",
               "Lambda.AWSLambdaException",
               "Lambda.SdkClientException",
-              "Lambda.TooManyRequestsException"
+              "Lambda.TooManyRequestsException",
+              "Lambda.ResourceNotReadyException"
             ],
-            "IntervalSeconds": 1,
-            "MaxAttempts": 3,
+            "IntervalSeconds": 5,
+            "MaxAttempts": 5,
             "BackoffRate": 2
           }
         ],
