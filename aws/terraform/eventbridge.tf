@@ -3,7 +3,10 @@ resource "aws_cloudwatch_event_rule" "transcribe_job_rule" {
   description = "Capture when Transcribe job ends"
   event_pattern = jsonencode({
     "detail" : {
-      "TranscriptionJobStatus" : ["COMPLETED", "FAILED"]
+      "TranscriptionJobStatus" : ["COMPLETED", "FAILED"],
+      "TranscriptionJobName" : [{
+        "prefix" : "${var.prefix}-"
+      }]
     },
     "detail-type" : ["Transcribe Job State Change"],
     "source" : ["aws.transcribe"]

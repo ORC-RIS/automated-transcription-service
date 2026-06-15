@@ -33,7 +33,9 @@ def lambda_handler(event, context):
         s3bucketInput = recordZero['s3']['bucket']['name']
 
         s3Path = "s3://" + s3bucketInput + "/" + s3object
-        jobName = re.sub('[^a-zA-Z0-9_\-.]+','_', s3object) + '-' + str(uuid.uuid4())
+        prefix = os.environ.get('PREFIX', 'ats')
+        clean_object = re.sub('[^a-zA-Z0-9_\-.]+','_', s3object)
+        jobName = f"{prefix}-{clean_object}-{str(uuid.uuid4())}"
 
         try:
             response = ts_client.start_transcription_job(
