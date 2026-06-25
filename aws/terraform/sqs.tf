@@ -85,7 +85,8 @@ resource "aws_sqs_queue_policy" "audio_to_transcribe_dlq" {
 }
 
 resource "aws_s3_bucket_notification" "upload_notification" {
-  bucket = aws_s3_bucket.upload.id
+  bucket      = aws_s3_bucket.upload.id
+  eventbridge = true
 
   queue {
     queue_arn = aws_sqs_queue.audio_to_transcribe.arn

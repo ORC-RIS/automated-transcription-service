@@ -9,3 +9,41 @@ Thus, we seek to provide a new service to researchers that will make audio trans
 This project has folders:
 * aws: To build a pipeline with terraform to accept audio files in an S3 input bucket and convert those to docx with the help of a Python script. Output files are placed in another S3 output bucket
 * google: Python script to convert json to text or docx only
+
+## Versioning & Releases
+
+This is a fork of [indiana-university/automated-transcription-service](https://github.com/indiana-university/automated-transcription-service) with additional customizations for use as a Git submodule in Terraform deployments.
+
+### Version scheme
+
+Releases follow the format `<upstream-version>-rci.<increment>`:
+
+- `2.3.1-rci.1` = based on upstream v2.3.1, first RCI release
+- `2.3.1-rci.2` = based on upstream v2.3.1, second RCI release
+- `2.4.0-rci.1` = synced to upstream v2.4.0, first RCI release on that base
+
+### Pinning as a submodule
+
+Reference a specific release tag in your Terraform module:
+
+```hcl
+source = "git::https://github.com/ORC-RIS/automated-transcription-service.git?ref=v2.3.1-rci.1"
+```
+
+### Release process
+
+1. Feature/bugfix branches are created from `develop` and merged back via squash merge.
+2. A release candidate branch (`rc-X.X.X-rci.N`) is created from `develop`.
+3. The RC is merged into `main` with a merge commit.
+4. A GitHub release is tagged on `main` (e.g., `v2.3.1-rci.1`).
+
+### Syncing with upstream
+
+When ready to incorporate upstream changes:
+
+```bash
+git fetch upstream
+git merge upstream/main
+```
+
+This updates `main` to the latest upstream release, after which new RCI changes are versioned against the new base (e.g., `v2.4.0-rci.1`).

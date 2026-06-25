@@ -12,6 +12,9 @@ terraform {
 }
 provider "aws" {
   region = var.region
+  ignore_tags {
+    key_prefixes = ["researchit:locked:"]
+  }
 }
 
 data "aws_caller_identity" "current" {}
